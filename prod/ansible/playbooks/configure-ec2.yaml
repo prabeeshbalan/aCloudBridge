@@ -1,0 +1,55 @@
+- name: Configure EC2 for aCloudBridge Application
+  hosts: ec2
+  become: yes
+
+  tasks:
+    - name: Install Git
+      yum:
+        name: git
+        state: present
+
+    - name: Install Node.js (using nvm)
+      shell: |
+        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+        . ~/.bashrc
+        nvm install 22
+
+    - name: Clone aCloudBridge Repository
+      git:
+        repo: "https://{{ githubuser }}:{{ githubpassword }}@github.com/prabeeshbalan/aCloudBridge.git"
+        dest: ~/aCloudBridge
+
+    - name: Install Frontend Dependencies
+      community.general.npm:
+        path: ~/aCloudBridge/frontend
+        production: true
+
+    - name: Install Backend Dependencies
+      community.general.npm:
+        path: ~/aCloudBridge/backend
+        production: true
+
+    - name: Install PM2 Globally
+      community.general.npm:
+        name: pm2
+        global: true
+
+    - name: Build Frontend
+      shell: |
+        cd ~/aCloudBridge/frontend
+        npm run build
+
+    - name: Build Backend
+      shell: |
+        cd ~/aCloudBridge/backend
+        npm run build
+
+    - name: Start Frontend with PM2
+      shell: |
+        cd ~/aCloudBridge/frontend
+        pm2 start npm --name acloudbridge-frontend -- start
+
+    - name: Start Backend with PM2
+      shell: |
+        cd ~/aCloudBridge/backend
+        pm2 start npm --name acloudbridge-backend -- start
