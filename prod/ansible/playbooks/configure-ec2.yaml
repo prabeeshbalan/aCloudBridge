@@ -58,7 +58,7 @@
 
     - name: Install PM2 Globally
       shell: |
-        source source /home/ec2-user/.bashrc
+        source /home/ec2-user/.bashrc
         nvm exec npm install -g pm2
       become_user: ec2-user
 
@@ -72,11 +72,22 @@
 
     - name: Build Backend
       shell: |
-        source source /home/ec2-user/.bashrc
+        source /home/ec2-user/.bashrc
         nvm exec npm run build
       args:
         chdir: ~/aCloudBridge/backend
       become_user: ec2-user
+
+    - name: Deploy Backend Configuration
+      template:
+        src: server.js.j2
+        dest: ~/aCloudBridge/backend/server.js
+      become_user: ec2-user
+      environment:
+        DB_HOST: "{{ lookup('terraform_output', 'db_endpoint') }}"
+        DB_USER: "{{ lookup('terraform_output', 'db_username') }}"
+        DB_PASSWORD: "{{ lookup('terraform_output', 'db_password') }}"
+        DB_NAME: "{{ lookup('terraform_output', 'db_name') }}"
 
     - name: Start Frontend with PM2
       shell: |
@@ -89,7 +100,7 @@
     - name: Start Backend with PM2
       shell: |
         source /home/ec2-user/.bashrc
-        nvm exec pm2 start npm --name acloudbridge-backend -- start
+        nvm exec pm2 start server.js --name acloudbridge-backend
       args:
         chdir: ~/aCloudBridge/backend
       become_user: ec2-user
