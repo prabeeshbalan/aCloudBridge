@@ -3,53 +3,93 @@
   become: yes
 
   tasks:
+    - name: Gathering Facts
+      setup:
+
+    - name: Update yum cache
+      yum:
+        update_cache: yes
+
     - name: Install Git
       yum:
         name: git
         state: present
 
-    - name: Install Node.js (using nvm)
+    - name: Install Node.js (using nvm) and npm
       shell: |
         curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
         . ~/.bashrc
         nvm install 22
+        nvm use 22
+        npm install -g npm@latest
+        echo "NVM installed and npm updated"
+        echo "NVM version: $(nvm --version)"
+        echo "NVM path: $(which nvm)"
+        echo "NPM version: $(npm --version)"
+        echo "NPM path: $(which npm)"
+        echo "PATH: $PATH"
+      become_user: ec2-user
 
     - name: Clone aCloudBridge Repository
       git:
         repo: "https://{{ githubuser }}:{{ githubpassword }}@github.com/prabeeshbalan/aCloudBridge.git"
         dest: ~/aCloudBridge
+      become_user: ec2-user
+
+    - name: Debug List frontend directory
+      shell: ls -l ~/aCloudBridge/frontend
+      become_user: ec2-user
 
     - name: Install Frontend Dependencies
-      community.general.npm:
-        path: ~/aCloudBridge/frontend
-        production: true
+      shell: |
+        source /home/ec2-user/.bashrc
+        nvm exec npm install
+      args:
+        chdir: ~/aCloudBridge/frontend
+      become_user: ec2-user
 
     - name: Install Backend Dependencies
-      community.general.npm:
-        path: ~/aCloudBridge/backend
-        production: true
+      shell: |
+        source /home/ec2-user/.bashrc
+        nvm exec npm install
+      args:
+        chdir: ~/aCloudBridge/backend
+      become_user: ec2-user
 
     - name: Install PM2 Globally
-      community.general.npm:
-        name: pm2
-        global: true
+      hell: |
+        source source /home/ec2-user/.bashrc
+        nvm exec npm install -g pm2
+      become_user: ec2-user
 
     - name: Build Frontend
       shell: |
-        cd ~/aCloudBridge/frontend
-        npm run build
+        source /home/ec2-user/.bashrc
+        nvm exec npm run build
+      args:
+        chdir: ~/aCloudBridge/frontend
+      become_user: ec2-user
 
     - name: Build Backend
       shell: |
-        cd ~/aCloudBridge/backend
-        npm run build
+        source source /home/ec2-user/.bashrc
+        nvm exec npm run build
+      args:
+        chdir: ~/aCloudBridge/backend
+      become_user: ec2-user
 
     - name: Start Frontend with PM2
       shell: |
-        cd ~/aCloudBridge/frontend
-        pm2 start npm --name acloudbridge-frontend -- start
+        source /home/ec2-user/.bashrc
+        nvm exec pm2 start npm --name acloudbridge-frontend -- start
+      args:
+        chdir: ~/aCloudBridge/frontend
+      become_user: ec2-user
 
     - name: Start Backend with PM2
       shell: |
-        cd ~/aCloudBridge/backend
-        pm2 start npm --name acloudbridge-backend -- start
+        source /home/ec2-user/.bashrc
+        nvm exec pm2 start npm --name acloudbridge-backend -- start
+      args:
+        chdir: ~/aCloudBridge/backend
+      become_user: ec2-user
