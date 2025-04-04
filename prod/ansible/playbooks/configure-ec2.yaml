@@ -57,7 +57,7 @@
       become_user: ec2-user
 
     - name: Install PM2 Globally
-      hell: |
+      shell: |
         source source /home/ec2-user/.bashrc
         nvm exec npm install -g pm2
       become_user: ec2-user
