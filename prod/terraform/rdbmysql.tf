@@ -4,7 +4,7 @@ resource "aws_db_instance" "mysql_instance" {
   engine               = "mysql"
   engine_version       = "8.0" # Choose your desired version
   instance_class       = "db.t4g.micro"
-  name                 = "app_database"
+  db_name              = "app_database"
   username             = "root"
   password             = "Password25!" # Use a secret management tool in production!
   parameter_group_name = "default.mysql8.0"
