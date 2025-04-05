@@ -1,6 +1,6 @@
 # Create network acl
-resource "aws_network_acl" "my-nacl" {
-  vpc_id = aws_vpc.my-vpc.id
+resource "aws_network_acl" "aws-nacl-free-tier" {
+  vpc_id = var.aws-vpc-free-tier_id
 
   egress {
     protocol   = "-1"
@@ -21,24 +21,24 @@ resource "aws_network_acl" "my-nacl" {
   }
 
   tags = {
-    Name = "my-nacl"
+    Name = "dev-nacl-free-tier"
   }
 }
 
 # nacl-subnet association
 resource "aws_network_acl_association" "a1-nacl-subnet" {
-  network_acl_id = aws_network_acl.my-nacl.id
-  subnet_id      = aws_subnet.my-subnet-public-us-east-1a.id
+  network_acl_id = aws_network_acl.aws-nacl-free-tier.id
+  subnet_id      = var.aws-subnet-public-us-east-1a_id
 }
 resource "aws_network_acl_association" "a2-nacl-subnet" {
-  network_acl_id = aws_network_acl.my-nacl.id
-  subnet_id      = aws_subnet.my-subnet-public-us-east-1b.id
+  network_acl_id = aws_network_acl.aws-nacl-free-tier.id
+  subnet_id      = var.aws-subnet-public-us-east-1b_id
 }
 resource "aws_network_acl_association" "a3-nacl-subnet" {
-  network_acl_id = aws_network_acl.my-nacl.id
-  subnet_id      = aws_subnet.my-subnet-private-us-east-1a.id
+  network_acl_id = aws_network_acl.aws-nacl-free-tier.id
+  subnet_id      = var.aws-subnet-private-us-east-1a_id
 }
 resource "aws_network_acl_association" "a4-nacl-subnet" {
-  network_acl_id = aws_network_acl.my-nacl.id
-  subnet_id      = aws_subnet.my-subnet-private-us-east-1b.id
+  network_acl_id = aws_network_acl.aws-nacl-free-tier.id
+  subnet_id      = var.aws-subnet-private-us-east-1b_id
 }
