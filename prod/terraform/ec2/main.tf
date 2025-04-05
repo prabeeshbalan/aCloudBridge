@@ -36,7 +36,5 @@ resource "local_file" "aws_tf_key" {
 }
 
 output "instance_public_ip" {
-
   value = aws_instance.aws-public-ec2-free-tier.public_ip
-
 }
