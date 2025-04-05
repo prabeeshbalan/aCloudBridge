@@ -6,7 +6,7 @@ module "aws-rds-mysql-free-tier" {
   source  = "terraform-aws-modules/rds/aws"
   version = "~> 6.11.0"
 
-  identifier = "minimal-mysql-db"
+  identifier = "acloudbridge-mysql-db"
 
   engine            = "mysql"
   engine_version    = "8.0"
@@ -20,7 +20,7 @@ module "aws-rds-mysql-free-tier" {
   password = "Password25!"  
   port     = 3306
 
-  iam_database_authentication_enabled = true
+  iam_database_authentication_enabled = false
 
   vpc_security_group_ids = [var.aws-public-sg_id]  # Replace with your security group ID
   subnet_ids             = [var.aws-subnet-public-us-east-1a_id, var.aws-subnet-public-us-east-1b_id, var.aws-subnet-private-us-east-1a_id, var.aws-subnet-private-us-east-1b_id]
@@ -32,7 +32,7 @@ module "aws-rds-mysql-free-tier" {
   skip_final_snapshot = true   # Set to false if you want a final snapshot before deletion
 
   tags = {
-    Name        = "MinimalRDS"
+    Name        = "aCloudBridegeRDSMySQL"
     Environment = "dev"
   }
 }
