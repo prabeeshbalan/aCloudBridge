@@ -34,6 +34,8 @@
       git:
         repo: "https://{{ githubuser }}:{{ githubpassword }}@github.com/prabeeshbalan/aCloudBridge.git"
         dest: /home/ec2-user/aCloudBridge
+        version: main
+        force: yes
       become_user: ec2-user
 
     - name: Debug List frontend directory
@@ -74,21 +76,56 @@
         chdir: /home/ec2-user/aCloudBridge/frontend
       become_user: ec2-user
 
-    - name: Build Backend  # Added the missing "build" script
+    - name: Build Backend 
       shell: |
         source /home/ec2-user/.bashrc
         nvm use 22
-        npm run build #  Added this line
+        npm run build 
       args:
         chdir: /home/ec2-user/aCloudBridge/backend
       become_user: ec2-user
+
+    - name: Update DNF Cache
+      dnf:
+        update_cache: yes
+
+    - name: Install MariaDB 105
+      dnf:
+        name: mariadb105
+        state: present
+    
+    - name: Debug Variables
+      debug:
+        msg: "db_endpoint: {{ terraform_db_endpoint }}, db_user: {{ terraform_db_username }}, db_password: {{ terraform_db_password }}, db_name: {{ terraform_db_name }}"
+    
+    - name: Create Database and Users Table in MySQL
+      shell: |
+        mysql -h "{{ terraform_db_endpoint }}" -u "{{ terraform_db_username }}" -p"{{ terraform_db_password }}" -D "{{ terraform_db_name }}" -e "
+          CREATE DATABASE IF NOT EXISTS app_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+          USE app_db;
+          CREATE TABLE IF NOT EXISTS users (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            username VARCHAR(255) NOT NULL UNIQUE,
+            password VARCHAR(255) NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+          ) ENGINE=InnoDB ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=8;
+          CREATE INDEX idx_username ON users(username);
+        "
+      become_user: ec2-user
+      register: mysql_result
+
+    - name: Fail if MySQL database/table creation failed
+      fail:
+        msg: "Failed to create database/table in MySQL: {{ mysql_result.stderr }}"
+      when: mysql_result.rc != 0
 
     - name: Deploy Backend Configuration
       template:
         src: server.js.j2
         dest: /home/ec2-user/aCloudBridge/backend/server.js
       become_user: ec2-user
-      vars: #  Using vars instead of environment
+      vars:
         db_host: "{{ hostvars['localhost']['terraform_db_endpoint'] }}"
         db_user: "{{ hostvars['localhost']['terraform_db_username'] }}"
         db_password: "{{ hostvars['localhost']['terraform_db_password'] }}"
