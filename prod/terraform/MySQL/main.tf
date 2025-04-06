@@ -1,7 +1,3 @@
-provider "aws" {
-  region = "us-east-1"
-}
-
 module "aws-rds-mysql-free-tier" {
   source  = "terraform-aws-modules/rds/aws"
   version = "~> 6.11.0"
@@ -15,9 +11,9 @@ module "aws-rds-mysql-free-tier" {
   major_engine_version             = "8.0"
   family                           = "mysql8.0"
 
-  db_name  = "app_database"
-  username = "root"
-  password = "Password25!"  
+  db_name  = var.db_name
+  username = var.db_username
+  password = var.db_password  
   port     = 3306
 
   iam_database_authentication_enabled = false

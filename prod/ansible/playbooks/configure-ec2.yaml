@@ -34,6 +34,7 @@
       git:
         repo: "https://{{ githubuser }}:{{ githubpassword }}@github.com/prabeeshbalan/aCloudBridge.git"
         dest: /home/ec2-user/aCloudBridge
+        force: yes
       become_user: ec2-user
 
     - name: Debug List frontend directory
@@ -83,14 +84,22 @@
         chdir: /home/ec2-user/aCloudBridge/backend
       become_user: ec2-user
 
-    - name: Install MySQL Client
-      yum:
-        name: mysql
-        state: present
+    - name: Update DNF Cache
+      dnf:
+        update_cache: yes
 
+    - name: Install MariaDB 105
+      dnf:
+        name: mariadb105
+        state: present
+    
+    - name: Debug Variables
+      debug:
+        msg: "db_endpoint: {{ terraform_db_endpoint }}, db_user: {{ terraform_db_username }}, db_password: {{ terraform_db_password }}, db_name: {{ terraform_db_name }}"
+    
     - name: Create Database and Users Table in MySQL
       shell: |
-        mysql -h "{{ hostvars['localhost']['terraform_db_endpoint'] }}" -u "{{ hostvars['localhost']['terraform_db_username'] }}" -p"{{ hostvars['localhost']['terraform_db_password'] }}" -e "
+        mysql -h "{{ terraform_db_endpoint }}" -u "{{ terraform_db_username }}" -p"{{ terraform_db_password }}" -D "{{ terraform_db_name }}" -e "
           CREATE DATABASE IF NOT EXISTS app_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
           USE app_db;
           CREATE TABLE IF NOT EXISTS users (
